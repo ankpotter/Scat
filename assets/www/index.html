@@ -1,10 +1,110 @@
 <!DOCTYPE HTML>
 <html>
  <head>
-  <title>PhoneGap</title>
-  <script type="text/javascript" charset="utf-8" src="cordova-1.5.0.js"></script>
+  <title>Scat</title>
+  
+  <script  type="text/javascript" src="jquery-2.1.1.min.js"></script>
+  <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+   <script type="text/javascript" src="SmsInboxPlugin.js"></script>
+	<script type = "text/javascript">
+	$( document ).ready(function() {
+	function createMessageDiv(message){
+		var name = message.name;
+		var text = message.text;
+		var tag = message.tag;
+		var msgDiv = $("<div>"),
+		nameDiv= $("<div>"),
+		txtDiv= $("<div>");
+		
+		msgDiv.addClass("msg-item");
+		txtDiv.addClass("msg-text");
+		nameDiv.addClass("msg-name");
+		
+		if(message.tag === "spam") msgDiv.addClass("msg-spam");		
+		
+		nameDiv.html(name);
+		txtDiv.html(text);
+		
+		msgDiv.append(nameDiv);
+		msgDiv.append(txtDiv);
+		$("#smsarea").append(msgDiv);
+	}
+	var smsInboxPlugin = cordova.require('cordova/plugin/smsinboxplugin');
+	smsInboxPlugin.startReception (function(msg) {
+		var m = msg.split(">");
+		msg = {
+			name: m[0],
+			text: m[1]
+		}
+		var done = false;
+		$.ajax({
+			url: "http://192.168.1.167:8080/",
+		 
+			// the name of the callback parameter, as specified by the YQL service
+			jsonpCallback: "callback",
+		 
+			// tell jQuery we're expecting JSONP
+			dataType: "jsonp",
+			type: 'GET',
+			// tell YQL what we want and that we want JSON
+			data: {
+				q: msg.text
+			},		 
+			// work with the response
+			success: function(data){
+				console.log(JSON.stringify(data));
+				var tag = data.results ? "spam" : "primary";
+				msg.tag = tag;
+				createMessageDiv(msg);
+				done = true;
+			}
+		});		
+	});
+});
+  </script>
+  
+  <style type="text/css">
+   * {
+		margin: 0;
+		padding: 0;
+		box-sizing: border-box;
+	}
+	
+	body {
+		font-size: 14px;
+		line-height: 21px;
+		font-family: sans-serif;
+		background-color: #fff;
+		color: #333;
+	}
+	
+	.msg-item { border-bottom: 1px solid #eee; float:left; width: 600px }
+	
+	.msg-item:last-of-type { border-bottom: none; }
+	
+	.msg-name { font-weight: bold;float:left; width:140px }
+	
+	.msg-text { color: #;float:left; width:400px }
+	
+	.msg-item.msg-spam {
+		font-style: italic;
+		font-weight:bold;
+		color:#fff;
+		background-color:#d23a2f
+	}
+  </style>
+  
  </head>
+ 
+ 
+ 
  <body>
-    <h1>Hello PhoneGap</h1>
+ <div id="smsarea">
+ <div class="msg-item">
+ 	<div class="msg-name">Name</div>
+ 	<div class="msg-text">Text</div>
+ </div>
+ </div>
+ 
  </body>
 </html>
